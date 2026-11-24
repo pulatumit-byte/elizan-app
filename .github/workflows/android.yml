@@ -31,6 +31,9 @@ jobs:
 
       - name: Android SDK kur
         uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: '12266719'
+          packages: platform-tools
 
       - name: SDK lisansları ve platform paketleri
         continue-on-error: true
