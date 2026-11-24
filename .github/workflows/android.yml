@@ -1,0 +1,95 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js 20 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Java 21 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: SDK lisansları ve platform paketleri
+        continue-on-error: true
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+
+      - name: Gradle önbelleği
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', 'capacitor.config.json') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Ortam bilgisi (hata ayıklama için)
+        run: |
+          echo "--- Node ---"; node -v
+          echo "--- Java ---"; java -version
+          echo "--- Android ---"; echo "ANDROID_HOME=$ANDROID_HOME"; echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+      - name: Bağımlılıkları yükle
+        run: npm install --no-audit --no-fund
+
+      - name: Capacitor sürümü
+        run: npx cap --version
+
+      - name: Android platformunu hazırla
+        run: |
+          if [ -d android ]; then
+            echo "android/ mevcut, senkronize ediliyor"
+            npx cap sync android
+          else
+            echo "android/ yok, oluşturuluyor"
+            npx cap add android
+            npx cap sync android
+          fi
+
+      - name: Uygulama ikonlarını üret (opsiyonel)
+        continue-on-error: true
+        run: npx capacitor-assets generate --android
+
+      - name: Gradle izni
+        run: chmod +x android/gradlew
+
+      - name: Debug APK derle
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: APK çıktısını doğrula
+        working-directory: android
+        run: ls -lh app/build/outputs/apk/debug/
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: elizan-apk-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
