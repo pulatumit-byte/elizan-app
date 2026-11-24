@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Elizan — Temizlik ve apartman yönetimi mobil uygulaması (demo).">
+<title>Elizan — Temizlik &amp; Apartman Yönetimi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Elizan">
+<style>
+  :root { --t1:#2dd4bf; --t2:#14b8a6; --t3:#0f766e; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
+    background:linear-gradient(160deg, var(--t1) 0%, var(--t2) 45%, var(--t3) 100%);
+    color:#fff; min-height:100dvh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+    overflow:hidden; position:relative;
+  }
+  .blob { position:absolute; border-radius:50%; background:rgba(255,255,255,.08); }
+  .blob.a { width:280px; height:280px; top:-90px; right:-100px; }
+  .blob.b { width:220px; height:220px; bottom:-80px; left:-80px; }
+  .glow {
+    position:absolute; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.32) 0%, rgba(255,255,255,0) 68%);
+    animation:glowPulse 3s ease-in-out infinite;
+  }
+  @keyframes glowPulse { 0%,100% { transform:scale(.85); opacity:.5; } 50% { transform:scale(1.08); opacity:1; } }
+  .stars { position:absolute; inset:0; pointer-events:none; }
+  .sp { position:absolute; color:#fff; text-shadow:0 0 12px rgba(255,255,255,.95); opacity:0; animation:twinkle 2.6s ease-in-out infinite; }
+  .s1 { top:24%; left:18%; font-size:17px; animation-delay:0s; }
+  .s2 { top:20%; right:20%; font-size:12px; animation-delay:.4s; }
+  .s3 { bottom:28%; left:22%; font-size:11px; animation-delay:.8s; }
+  .s4 { bottom:24%; right:18%; font-size:15px; animation-delay:1.2s; }
+  .s5 { top:40%; right:10%; font-size:10px; animation-delay:1.6s; }
+  @keyframes twinkle { 0%,100% { opacity:0; transform:scale(.3) translateY(0); } 45% { opacity:1; transform:scale(1) translateY(-6px); } 70% { opacity:.15; } }
+  .logo { position:relative; z-index:1; width:min(82vw, 310px); animation:logoIn .9s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes logoIn { 0% { opacity:0; transform:translateY(18px) scale(.9); } 60% { opacity:1; } 100% { opacity:1; transform:none; } }
+  .actions { position:relative; z-index:1; margin-top: clamp(28px, 6vh, 52px); display:flex; flex-direction:column; gap:12px; width:min(86vw, 320px); }
+  .cta {
+    border:0; cursor:pointer; font:inherit; font-weight:700; font-size:16px;
+    background:#fff; color:#0d9488; padding:15px 22px; border-radius:14px;
+    box-shadow:0 10px 24px rgba(0,0,0,.18); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .cta:active { transform:scale(.97); box-shadow:0 4px 12px rgba(0,0,0,.2); }
+  .ghost {
+    border:1.5px solid rgba(255,255,255,.65); background:rgba(255,255,255,.12); color:#fff;
+    font:inherit; font-weight:600; font-size:13px; padding:11px 18px; border-radius:12px; cursor:pointer;
+    backdrop-filter:blur(6px); transition:transform .15s ease;
+  }
+  .ghost:active { transform:scale(.97); }
+  .hint {
+    position:relative; z-index:1; margin-top:16px; font-size:11.5px; line-height:1.6;
+    color:rgba(255,255,255,.85); max-width:300px; background:rgba(0,0,0,.16);
+    padding:10px 14px; border-radius:12px;
+  }
+  .ver { position:absolute; bottom:calc(14px + env(safe-area-inset-bottom)); font-size:10px; letter-spacing:.5px; color:rgba(255,255,255,.55); z-index:1; }
+  .toast {
+    position:fixed; left:50%; bottom:32px; transform:translate(-50%, 20px); opacity:0; pointer-events:none;
+    background:rgba(15,23,42,.9); color:#fff; font-size:12.5px; padding:10px 16px; border-radius:999px;
+    transition:opacity .25s, transform .25s; z-index:5;
+  }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) {
+    .glow, .sp, .logo { animation:none; } .sp { opacity:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="blob a"></div>
+  <div class="blob b"></div>
+  <div class="glow"></div>
+  <div class="stars">
+    <span class="sp s1">✦</span><span class="sp s2">✧</span><span class="sp s3">✦</span><span class="sp s4">✧</span><span class="sp s5">✦</span>
+  </div>
+
+  <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 150" role="img" aria-label="Elizan — Temizlik ve Apartman Yönetimi">
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2dd4bf"/><stop offset="0.55" stop-color="#14b8a6"/><stop offset="1" stop-color="#0f766e"/>
+      </linearGradient>
+      <mask id="bldg">
+        <rect width="120" height="120" fill="#000"/>
+        <rect x="28" y="58" width="17" height="38" rx="4" fill="#fff"/>
+        <rect x="51" y="42" width="17" height="54" rx="4" fill="#fff"/>
+        <rect x="74" y="50" width="17" height="46" rx="4" fill="#fff"/>
+        <g fill="#000">
+          <rect x="32" y="63" width="9" height="6" rx="1.5"/><rect x="32" y="73" width="9" height="6" rx="1.5"/><rect x="32" y="83" width="9" height="6" rx="1.5"/>
+          <rect x="55" y="47" width="9" height="6" rx="1.5"/><rect x="55" y="57" width="9" height="6" rx="1.5"/><rect x="55" y="67" width="9" height="6" rx="1.5"/><rect x="55" y="77" width="9" height="6" rx="1.5"/><rect x="55" y="87" width="9" height="6" rx="1.5"/>
+          <rect x="78" y="55" width="9" height="6" rx="1.5"/><rect x="78" y="65" width="9" height="6" rx="1.5"/><rect x="78" y="75" width="9" height="6" rx="1.5"/><rect x="78" y="85" width="9" height="6" rx="1.5"/>
+        </g>
+      </mask>
+    </defs>
+    <g transform="translate(10,15)">
+      <rect width="120" height="120" rx="28" fill="#ffffff"/>
+      <rect width="120" height="120" rx="28" fill="url(#tg)" mask="url(#bldg)"/>
+      <path d="M93 20 C94.6 27.4 96.6 29.4 104 31 C96.6 32.6 94.6 34.6 93 42 C91.4 34.6 89.4 32.6 82 31 C89.4 29.4 91.4 27.4 93 20 Z" fill="url(#tg)"/>
+    </g>
+    <text x="150" y="72" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="44" font-weight="800" letter-spacing="7" fill="#ffffff">ELIZAN</text>
+    <text x="152" y="99" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" letter-spacing="3" fill="#ccfbf1">TEMİZLİK &amp; APARTMAN YÖNETİMİ</text>
+  </svg>
+
+  <div class="actions">
+    <button id="enter" class="cta">Demo'ya Gir →</button>
+    <button id="install" class="ghost" hidden>⤓ Ana ekrana ekle</button>
+  </div>
+
+  <div id="iosHint" class="hint" hidden>
+    iPhone/iPad: <b>Paylaş</b> düğmesine bas → <b>“Ana Ekrana Ekle”</b> seç.
+  </div>
+
+  <div class="ver">v1.0 · Demo · 18 ekran</div>
+  <div id="toast" class="toast"></div>
+
+<script>
+  /* ---------- Pırıltı sesi (Web Audio) ---------- */
+  var actx = null;
+  function audioCtx() {
+    if (!actx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; actx = new AC(); }
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function tone(freq, start, dur, type, gain) {
+    var c = audioCtx(); if (!c) return;
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    var t0 = c.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain || 0.06, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t0); o.stop(t0 + dur + 0.03);
+  }
+  function sparkle() {
+    var notes = [2093.0, 2637.0, 3136.0, 3520.0, 4186.0];
+    for (var i = 0; i < notes.length; i++) tone(notes[i], i * 0.06, 0.45, 'sine', 0.06);
+    tone(1046.5, 0, 0.5, 'triangle', 0.04);
+  }
+
+  var toast = document.getElementById('toast');
+  function showToast(msg) {
+    toast.textContent = msg; toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------- Giriş ---------- */
+  document.getElementById('enter').addEventListener('click', function () {
+    sparkle();
+    setTimeout(function () { location.href = 'prototype.html'; }, 180);
+  });
+
+  /* ---------- Service Worker ---------- */
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+
+  /* ---------- Kurulum (Ana ekrana ekle) ---------- */
+  var deferredPrompt = null;
+  var installBtn = document.getElementById('install');
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener('click', function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function (res) {
+      if (res.outcome === 'accepted') showToast('Elizan ana ekrana eklendi ✓');
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+  });
+  window.addEventListener('appinstalled', function () { installBtn.hidden = true; showToast('Elizan kuruldu ✓'); });
+
+  /* ---------- iOS ipucu ---------- */
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (isIOS && !standalone) document.getElementById('iosHint').hidden = false;
+</script>
+</body>
+</html>
